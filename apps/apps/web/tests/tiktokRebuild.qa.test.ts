@@ -44,10 +44,10 @@ describe("CRY-82 TikTok-style rebuild QA", () => {
   scroll-snap-align: start;
   min-height: 100vh;
   display: grid;
-  grid-template-columns: minmax(0, 520px) 86px;
+  grid-template-columns: minmax(0, 560px) 64px;
   justify-content: center;
   align-items: end;
-  gap: 0.75rem;
+  gap: 0.5rem;
   padding: 0;
   border-radius: 0;
   border: none;`)

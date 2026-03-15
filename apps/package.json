@@ -8,6 +8,9 @@
     "dev:api": "bun run --cwd apps/api dev",
     "dev:api:stable": "bash ./scripts/dev-api-supervisor.sh",
     "dev:web": "bun run --cwd apps/web dev",
+    "build:web": "bun run --cwd apps/web build",
+    "start:web": "bun run --cwd apps/web start",
+    "start:api": "bun run --cwd apps/api start",
     "typecheck": "bun run --cwd apps/api typecheck && bun run --cwd apps/web typecheck",
     "e2e:local": "bash ./scripts/e2e-local.sh"
   },

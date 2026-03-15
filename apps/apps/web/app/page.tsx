@@ -69,6 +69,30 @@ function walletConflictFallbackMessage(): string {
   return "Wallet extension conflict detected. Disable conflicting EVM wallet extensions or enter Aptos wallet address manually.";
 }
 
+function extractHashtags(caption: string | null): string[] {
+  if (!caption) {
+    return [];
+  }
+  const matches = caption.match(/#[\p{L}\p{N}_]+/gu);
+  return matches ? matches.slice(0, 3) : [];
+}
+
+function captionWithoutHashtags(caption: string | null): string {
+  if (!caption) {
+    return "No caption";
+  }
+  const stripped = caption.replace(/#[\p{L}\p{N}_]+/gu, "").replace(/\s+/g, " ").trim();
+  return stripped.length > 0 ? stripped : "No caption";
+}
+
+function isNftCaption(caption: string | null): boolean {
+  return /(^|\s)#nft\b/i.test(caption ?? "");
+}
+
+function profileInitial(displayName: string): string {
+  return displayName.slice(0, 1).toUpperCase();
+}
+
 const APT_OCTA = 100_000_000n;
 const MAX_DONATE_APT = 10_000;
 
@@ -914,7 +938,7 @@ export default function HomePage() {
           />
         </div>
         <div className="header-actions">
-          <button className="secondary-button" onClick={() => setNavPanel("upload")}>
+          <button className="secondary-button" onClick={() => setNavPanel("upload")} disabled={!canInteract} title={!canInteract ? "Connect wallet to upload" : undefined}>
             Upload
           </button>
           <button className="wallet-button" onClick={canInteract ? onDisconnect : onConnect} disabled={loading}>
@@ -961,7 +985,7 @@ export default function HomePage() {
           </nav>
 
           <div className="side-stack">
-            <button className="secondary-button" onClick={() => setNavPanel("upload")}>
+            <button className="secondary-button" onClick={() => setNavPanel("upload")} disabled={!canInteract} title={!canInteract ? "Connect wallet to upload" : undefined}>
               Upload Clip
             </button>
             <button className="secondary-button" onClick={() => setNavPanel("profile")}>
@@ -1025,69 +1049,73 @@ export default function HomePage() {
             ) : (
               <div className="video-feed-container">
                 {visibleFeed.map((item, index) => (
-                  <article
-                    key={item.id}
-                    className={index === activeIndex ? "video-card video-card-active" : "video-card"}
-                    onMouseEnter={() => setActiveIndex(index)}
-                    onFocus={() => setActiveIndex(index)}
-                    tabIndex={0}
-                  >
-                    <div className="video-frame">
-                      <video
-                        src={item.videoUrl}
-                        controls
-                        loop
-                        autoPlay={index === activeIndex}
-                        muted
-                        playsInline
-                        preload="metadata"
-                        className="video-stage"
-                      />
-                      <div className="video-overlay absolute bottom-0">
-                        <p className="owner">@{item.ownerDisplayName}</p>
-                        <p className="caption">{item.caption ?? "No caption"}</p>
-                        <small>{formatTime(item.createdAt)}</small>
-                      </div>
-                    </div>
+                  (() => {
+                    const hashtags = extractHashtags(item.caption);
+                    const isNftVideo = isNftCaption(item.caption);
+                    return (
+                      <article
+                        key={item.id}
+                        className={index === activeIndex ? "video-card video-card-active" : "video-card"}
+                        onMouseEnter={() => setActiveIndex(index)}
+                        onFocus={() => setActiveIndex(index)}
+                        tabIndex={0}
+                      >
+                        <div className="video-frame">
+                          <video
+                            src={item.videoUrl}
+                            controls
+                            loop
+                            autoPlay={index === activeIndex}
+                            muted={index !== activeIndex}
+                            playsInline
+                            preload="metadata"
+                            className="video-stage"
+                          />
+                          {isNftVideo ? <span className="nft-badge">NFT</span> : null}
+                          <div className="video-overlay absolute bottom-0">
+                            <p className="owner">@{item.ownerDisplayName}</p>
+                            <p className="caption">{captionWithoutHashtags(item.caption)}</p>
+                            {hashtags.length > 0 ? <p className="hashtags">{hashtags.join(" ")}</p> : null}
+                            <small>{formatTime(item.createdAt)}</small>
+                          </div>
+                        </div>
 
-                    <div className="action-rail">
-                      <button onClick={() => void onLike(item.id)} disabled={!canInteract}>
-                        <span className="action-icon" aria-hidden="true">
-                          <ActionIcon name="like" />
-                        </span>
-                        <strong>{item.likes}</strong>
-                        <span>Like</span>
-                      </button>
-                      <button onClick={() => void onComment(item.id)} disabled={!canInteract}>
-                        <span className="action-icon" aria-hidden="true">
-                          <ActionIcon name="comment" />
-                        </span>
-                        <strong>{item.comments}</strong>
-                        <span>Comment</span>
-                      </button>
-                      <button onClick={() => void onShare(item.id, item.videoUrl)}>
-                        <span className="action-icon" aria-hidden="true">
-                          <ActionIcon name="share" />
-                        </span>
-                        <strong>{shareStatusByVideoId[item.id] === "copied" ? "Done" : "Copy"}</strong>
-                        <span>Share</span>
-                      </button>
-                      <button className="donate-cta" onClick={() => void onDonate(item.id)} disabled={!canInteract}>
-                        <span className="action-icon" aria-hidden="true">
-                          <ActionIcon name="donate" />
-                        </span>
-                        <strong>{item.donations} S</strong>
-                        <span>Donate</span>
-                      </button>
-                      <button onClick={() => void onDownload(item.id)} disabled={!canInteract}>
-                        <span className="action-icon" aria-hidden="true">
-                          <ActionIcon name="download" />
-                        </span>
-                        <strong>{item.downloads}</strong>
-                        <span>Download</span>
-                      </button>
-                    </div>
-                  </article>
+                        <div className="action-rail">
+                          <div className="action-avatar" aria-label={`${item.ownerDisplayName} avatar`} title={item.ownerDisplayName}>
+                            {profileInitial(item.ownerDisplayName)}
+                          </div>
+                          <button onClick={() => void onLike(item.id)} disabled={!canInteract}>
+                            <span className="action-icon" aria-hidden="true">
+                              <ActionIcon name="like" />
+                            </span>
+                            <strong>{item.likes}</strong>
+                            <span>Like</span>
+                          </button>
+                          <button onClick={() => void onComment(item.id)} disabled={!canInteract}>
+                            <span className="action-icon" aria-hidden="true">
+                              <ActionIcon name="comment" />
+                            </span>
+                            <strong>{item.comments}</strong>
+                            <span>Comment</span>
+                          </button>
+                          <button onClick={() => void onShare(item.id, item.videoUrl)}>
+                            <span className="action-icon" aria-hidden="true">
+                              <ActionIcon name="share" />
+                            </span>
+                            <strong>{shareStatusByVideoId[item.id] === "copied" ? "Done" : "Copy"}</strong>
+                            <span>Share</span>
+                          </button>
+                          <button className="donate-cta" onClick={() => void onDonate(item.id)} disabled={!canInteract}>
+                            <span className="action-icon" aria-hidden="true">
+                              <ActionIcon name="donate" />
+                            </span>
+                            <strong>{item.donations} S</strong>
+                            <span>Donate</span>
+                          </button>
+                        </div>
+                      </article>
+                    );
+                  })()
                 ))}
               </div>
             )
@@ -1111,6 +1139,7 @@ export default function HomePage() {
                   Close
                 </button>
               </header>
+              <div className="utility-drawer-content">
 
               {isProfileWalletPanel ? (
                 <div className="panel profile-sheet">
@@ -1377,6 +1406,7 @@ export default function HomePage() {
                   )}
                 </div>
               ) : null}
+              </div>
             </section>
           ) : null}
         </section>

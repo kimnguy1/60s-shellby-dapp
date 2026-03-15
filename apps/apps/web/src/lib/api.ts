@@ -6,11 +6,31 @@ import type {
   WalletProfile
 } from "@/types/airdrop";
 
-const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8787";
 const requestTimeoutMs = 8_000;
 const transientRetryDelayMs = 300;
-const backendUnavailableMessage = `Cannot reach backend API at ${apiBase}. Start or restart the API service, then retry.`;
-const backendTimeoutMessage = `Backend API timed out at ${apiBase}. Check API health/network, then retry.`;
+const missingApiBaseMessage =
+  "Missing NEXT_PUBLIC_API_BASE_URL. Set it to the deployed backend API base URL before running the web app.";
+
+function resolveApiBase(): string {
+  const configured = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
+  if (configured && configured.length > 0) {
+    return configured.replace(/\/+$/, "");
+  }
+
+  if (process.env.NODE_ENV !== "production") {
+    return "http://localhost:8787";
+  }
+
+  return "";
+}
+
+function backendUnavailableMessage(apiBase: string): string {
+  return `Cannot reach backend API at ${apiBase}. Start or restart the API service, then retry.`;
+}
+
+function backendTimeoutMessage(apiBase: string): string {
+  return `Backend API timed out at ${apiBase}. Check API health/network, then retry.`;
+}
 
 export class ApiError extends Error {
   readonly status: number;
@@ -56,6 +76,11 @@ function parseApiErrorMessage(payload: unknown, fallback: string): string {
 }
 
 async function request<T>(path: string, init?: RequestInit, options?: RequestOptions): Promise<T> {
+  const apiBase = resolveApiBase();
+  if (apiBase.length === 0) {
+    throw new ApiError(missingApiBaseMessage, 500, path);
+  }
+
   const retries = options?.retries ?? 0;
   let attempt = 0;
 
@@ -96,10 +121,10 @@ async function request<T>(path: string, init?: RequestInit, options?: RequestOpt
         continue;
       }
       if (isAbortError(error)) {
-        throw new ApiError(backendTimeoutMessage, 408, path);
+        throw new ApiError(backendTimeoutMessage(apiBase), 408, path);
       }
       if (isNetworkError(error)) {
-        throw new ApiError(backendUnavailableMessage, 503, path);
+        throw new ApiError(backendUnavailableMessage(apiBase), 503, path);
       }
       if (error instanceof Error) {
         throw error;

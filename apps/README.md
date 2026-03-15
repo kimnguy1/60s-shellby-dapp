@@ -14,7 +14,7 @@
 - `apps/web`: vertical video feed UI + wallet-gated interactions
 - `scripts/e2e-local.sh`: API smoke e2e for local development
 
-## Run locally
+## Local development
 
 ```bash
 pnpm install
@@ -30,6 +30,39 @@ pnpm dev:api:stable
 
 API defaults to `http://localhost:8787`, web defaults to `http://localhost:3000`.
 Set `NEXT_PUBLIC_API_BASE_URL` in web environment if needed.
+
+## Frontend/backend split deployment
+
+The apps are deployable independently:
+
+- Web app: `apps/web` (Next.js, deploy to Vercel)
+- API service: `apps/api` (Bun + Hono, deploy to any Bun-capable runtime)
+
+### Required environment variables
+
+- Web (`apps/web`)
+  - `NEXT_PUBLIC_API_BASE_URL` (required in production): full backend origin, e.g. `https://api.example.com`
+- API (`apps/api`)
+  - `PORT` (optional, default `8787`)
+  - `CORS_ORIGINS` (recommended for production): comma-separated frontend origins, e.g. `https://your-app.vercel.app,https://www.example.com`
+  - `DB_PATH` (optional): SQLite file path
+
+### Build/run independently
+
+From this `apps/` workspace directory:
+
+```bash
+pnpm build:web
+pnpm start:web
+pnpm start:api
+```
+
+### Vercel handoff (frontend)
+
+1. Set project root to `apps/apps/web`.
+2. Build command: `pnpm build` (or `bun run build`).
+3. Set env var `NEXT_PUBLIC_API_BASE_URL` to the deployed API base URL.
+4. Redeploy after env updates.
 
 ## API endpoint map
 
