@@ -1,0 +1,12 @@
+version: "3.9"
+services:
+  workspace:
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
+    volumes:
+      - ./:/workspace
+    working_dir: /workspace
+    command: sleep infinity
+    environment:
+      - NODE_ENV=development

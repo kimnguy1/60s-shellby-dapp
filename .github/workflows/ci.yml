@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  lint-test-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: |
+          if [ -f package.json ]; then
+            if [ -f pnpm-lock.yaml ]; then
+              pnpm install --frozen-lockfile || pnpm install
+            else
+              npm ci || npm install
+            fi
+          else
+            echo "No package.json yet; skipping install"
+          fi
+
+      - name: Lint
+        run: bash scripts/ci-lint.sh
+
+      - name: Test
+        run: bash scripts/ci-test.sh
+
+      - name: Build
+        run: bash scripts/ci-build.sh

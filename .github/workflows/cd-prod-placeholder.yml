@@ -1,0 +1,17 @@
+name: CD Prod Placeholder
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-prod:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to production (placeholder)
+        env:
+          PROD_API_KEY: ${{ secrets.PROD_API_KEY }}
+        run: bash scripts/deploy-prod.sh

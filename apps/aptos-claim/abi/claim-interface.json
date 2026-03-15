@@ -1,0 +1,77 @@
+{
+  "module": "<DEPLOYED_ADDRESS>::claim",
+  "network": "aptos-testnet",
+  "entryFunctions": [
+    {
+      "name": "initialize",
+      "visibility": "public_entry",
+      "params": [
+        "admin: address"
+      ],
+      "notes": "Must be called by module publisher account once."
+    },
+    {
+      "name": "set_admin",
+      "visibility": "public_entry",
+      "params": [
+        "new_admin: address"
+      ],
+      "notes": "Current admin only."
+    },
+    {
+      "name": "create_campaign",
+      "visibility": "public_entry",
+      "params": [
+        "campaign_id: u64",
+        "metadata_uri: vector<u8>",
+        "total_amount: u64",
+        "starts_at_secs: u64",
+        "ends_at_secs: u64"
+      ]
+    },
+    {
+      "name": "set_campaign_enabled",
+      "visibility": "public_entry",
+      "params": [
+        "campaign_id: u64",
+        "enabled: bool"
+      ]
+    },
+    {
+      "name": "upsert_eligibility",
+      "visibility": "public_entry",
+      "params": [
+        "campaign_id: u64",
+        "account: address",
+        "amount: u64"
+      ]
+    },
+    {
+      "name": "batch_upsert_eligibility",
+      "visibility": "public_entry",
+      "params": [
+        "campaign_id: u64",
+        "accounts: vector<address>",
+        "amounts: vector<u64>"
+      ],
+      "limits": {
+        "max_batch_size": 1000
+      }
+    },
+    {
+      "name": "claim",
+      "visibility": "public_entry",
+      "params": [
+        "campaign_id: u64"
+      ]
+    }
+  ],
+  "viewFunctions": [
+    "get_campaign(campaign_id: u64): Campaign",
+    "get_eligibility(campaign_id: u64, account: address): EligibilityRecord",
+    "is_claimed(campaign_id: u64, account: address): bool",
+    "campaign_claimed_amount(campaign_id: u64): u64",
+    "campaign_enabled(campaign_id: u64): bool",
+    "admin_address(): address"
+  ]
+}

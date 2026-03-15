@@ -1,0 +1,19 @@
+name: CD Staging
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to staging
+        env:
+          STAGING_API_KEY: ${{ secrets.STAGING_API_KEY }}
+        run: bash scripts/deploy-staging.sh

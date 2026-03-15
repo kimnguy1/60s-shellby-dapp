@@ -1,0 +1,14 @@
+{
+  "name": "crypto-airdrop-studio",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "workspace",
+  "workspaceFolder": "/workspace",
+  "postCreateCommand": "bash scripts/setup-local.sh",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  }
+}

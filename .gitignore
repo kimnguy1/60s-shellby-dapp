@@ -1,0 +1,29 @@
+# Environment files
+.env
+.env.*
+!.env.example
+!.env.staging.example
+!.env.production.example
+
+# Node
+node_modules/
+.pnpm-store/
+dist/
+coverage/
+.next/
+
+# Aptos
+.aptos/
+build/
+
+# Runtime/test artifacts
+.runtime/
+test-results/
+qa/playwright-report/
+*.pid
+*.log
+*.db
+
+# Editor/OS
+.vscode/
+.DS_Store
